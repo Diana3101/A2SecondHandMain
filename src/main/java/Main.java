@@ -20,22 +20,24 @@ public class Main {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         Seller seller1 = new Seller( "Dasha", "Orlova", SellerWish.GooglePromotion);
-        List<Thing> addedThings = createThingList(seller1);
+        List<Thing> addedThings = createThingList();
         List<Integer> quantities = Arrays.asList(1,2,3,4,5);
 
         //added things on site
         addThingsOnSite(seller1, addedThings, quantities);
 
         //get things from DB
-        ResponseEntity<ThingsDTO> response2 = restTemplate
-                .exchange(URL + "/things/getAll", HttpMethod.GET, headersEntity, ThingsDTO.class);
-        printThings(Objects.requireNonNull(response2.getBody()).getThings());
+        ResponseEntity<Thing[]> response2 = restTemplate
+                .exchange(URL + "/things", HttpMethod.GET, headersEntity, Thing[].class);
+        List<Thing> things = Arrays.asList(Objects.requireNonNull(response2.getBody()));
+        System.out.println(things);
 
         //get things from DB
          response2 = restTemplate
-                 .exchange(URL + "/things/getAll", HttpMethod.GET, headersEntity, ThingsDTO.class);
-         List<Thing> thingsForSale = Objects.requireNonNull(response2.getBody()).getThings();
-         printThings(thingsForSale);
+                 .exchange(URL + "/things", HttpMethod.GET, headersEntity, Thing[].class);
+        List<Thing> thingsForSale = Arrays.asList(Objects.requireNonNull(response2.getBody()));
+        System.out.println(thingsForSale);
+
 
         Customer customer1 = new Customer( "Masha", "Driha", Size.M, Problems.AppSlowsDown);
         Customer customer2 = new Customer( "Anna", "Derek", Size.XS, Problems.ButtonIsNotPressed);
@@ -47,29 +49,26 @@ public class Main {
 
         System.out.println("Trying to create new order");
         List<Thing> bucketForCustomer2 = new ArrayList<>(thingsForSale.subList(2, 5));
-        // bucketForCustomer2.add(thingsForSale.get(5));
         makeOrder(customer2, seller1, bucketForCustomer2);
 
         //get things from DB
         response2 = restTemplate
-                .exchange(URL + "/things/getAll", HttpMethod.GET, headersEntity, ThingsDTO.class);
-        printThings(Objects.requireNonNull(response2.getBody()).getThings());
+                .exchange(URL + "/things", HttpMethod.GET, headersEntity, Thing[].class);
+        System.out.println(Arrays.asList(Objects.requireNonNull(response2.getBody())));
 
         //get customers from DB
-        ResponseEntity<CustomerDTO> response4 = restTemplate
-                .exchange(URL + "/customers/getAll", HttpMethod.GET, headersEntity, CustomerDTO.class);
+        ResponseEntity<Customer[]> response4 = restTemplate
+                .exchange(URL + "/customers", HttpMethod.GET, headersEntity, Customer[].class);
         System.out.println("___________________________________________" + "\nCustomers: ");
-        for (Customer c : Objects.requireNonNull(response4.getBody()).getCustomers()) {
-            System.out.println(c);
-        }
+        List<Customer> customers = Arrays.asList(Objects.requireNonNull(response4.getBody()));
+        System.out.println(customers);
         System.out.println("\n___________________________________________");
 
-        ResponseEntity<OrdersDTO> response5 = restTemplate
-                .exchange(URL + "/orders/getAll", HttpMethod.GET, headersEntity, OrdersDTO.class);
+        ResponseEntity<Order[]> response5 = restTemplate
+                .exchange(URL + "/orders", HttpMethod.GET, headersEntity, Order[].class);
         System.out.println("___________________________________________" + "\nOrders: ");
-        for (Order o : Objects.requireNonNull(response5.getBody()).getOrders()) {
-            System.out.println(o);
-        }
+        List<Order> orders = Arrays.asList(Objects.requireNonNull(response5.getBody()));
+        System.out.println(orders);
         System.out.println("\n___________________________________________");
     }
 
@@ -80,11 +79,11 @@ public class Main {
         createOrderDTO.setThings(bucketForCustomer);
         HttpEntity<CreateOrderDTO> createOrder = new HttpEntity<>(createOrderDTO);
         ResponseEntity<Void> response4 = restTemplate
-                .exchange(URL + "/orders/create", HttpMethod.POST,
+                .exchange(URL + "/orders", HttpMethod.POST,
                         createOrder, Void.class);
     }
 
-    public static List<Thing> createThingList(Seller seller1) {
+    public static List<Thing> createThingList() {
 
         Thing thing1 = new Thing(NameofThing.shirt, 30, Size.M, ConditionOfThing.good);
         Thing thing2 = new Thing(NameofThing.skirt, 35, Size.S, ConditionOfThing.veryGood);
@@ -107,20 +106,8 @@ public class Main {
 
         HttpEntity<String> serveJson = new HttpEntity<>(serveJsonStr, headers);
         ResponseEntity<Void> response1 = restTemplate
-                .exchange(URL + "/sell/sellThings", HttpMethod.POST, serveJson, Void.class);
+                .exchange(URL + "/sellers", HttpMethod.POST, serveJson, Void.class);
 
         System.out.println("Seller " + seller1.getLastName() + " has added " + addedThings);
-    }
-
-    private static void printThings(List<Thing> things) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("\n___________________________________________");
-        stringBuilder.append("\nThings: ");
-        for (Thing th : things) {
-            stringBuilder.append("\n").append(th);
-        }
-        stringBuilder.append("\n___________________________________________");
-
-        System.out.println(stringBuilder.toString());
     }
 }
